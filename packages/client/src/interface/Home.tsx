@@ -1,4 +1,4 @@
-import { For, createSignal } from "solid-js";
+import { For, createSignal, onMount, onCleanup } from "solid-js";
 
 import { Trans } from "@lingui/solid/macro";
 import { cva } from "styled-system/css";
@@ -9,6 +9,8 @@ import { Header, iconSize, main } from "@revolt/ui";
 import MdHome from "@material-design-icons/svg/filled/home.svg?component-solid";
 
 import { HeaderIcon } from "./common/CommonHeader";
+
+const CLICK_SOUND_URL = "/click.mp3";
 
 const Base = styled("div", {
   base: {
@@ -94,6 +96,22 @@ const images = import.meta.glob<string>(
 
 export function HomePage() {
   const [opened, setOpened] = createSignal<string | null>(null);
+
+  onMount(() => {
+    const clickAudio = new Audio(CLICK_SOUND_URL);
+    clickAudio.volume = 0.3;
+
+    const handleGlobalClick = () => {
+      clickAudio.currentTime = 0;
+      clickAudio.play().catch(() => {});
+    };
+
+    document.addEventListener("click", handleGlobalClick);
+
+    onCleanup(() => {
+      document.removeEventListener("click", handleGlobalClick);
+    });
+  });
 
   return (
     <Base>
