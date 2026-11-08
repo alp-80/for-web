@@ -1,10 +1,10 @@
-import { For, createSignal, onMount, onCleanup } from "solid-js";
+import { createSignal, onMount, onCleanup } from "solid-js";
 
 import { Trans } from "@lingui/solid/macro";
 import { cva } from "styled-system/css";
 import { styled } from "styled-system/jsx";
 
-import { Header, iconSize, main } from "@revolt/ui";
+import { Header, iconSize } from "@revolt/ui";
 
 import MdHome from "@material-design-icons/svg/filled/home.svg?component-solid";
 
@@ -15,6 +15,7 @@ const CLICK_SOUND_URL = "/click.mp3";
 const Base = styled("div", {
   base: {
     width: "100%",
+    height: "100%",
     display: "flex",
     flexDirection: "column",
     color: "var(--md-sys-color-on-surface)",
@@ -23,69 +24,21 @@ const Base = styled("div", {
 
 const content = cva({
   base: {
-    ...main.raw(),
-    padding: "48px 0",
-    gap: "32px",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
-
-const Gallery = styled("div", {
-  base: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-    gap: "16px",
+    flex: "1",
+    minHeight: "0",
     width: "100%",
-    maxWidth: "1100px",
-    padding: "0 24px",
-  },
-});
-
-const Thumb = styled("button", {
-  base: {
-    padding: 0,
-    border: "none",
-    cursor: "pointer",
-    borderRadius: "var(--borderRadius-lg)",
-    overflow: "hidden",
-    background: "var(--md-sys-color-surface-variant)",
-    aspectRatio: "1 / 1",
-
-    "& img": {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      display: "block",
-      transition: "transform 0.2s",
-    },
-    "&:hover img": {
-      transform: "scale(1.05)",
-    },
-  },
-});
-
-const Lightbox = styled("div", {
-  base: {
-    position: "fixed",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
+    height: "100%",
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "rgba(0, 0, 0, 0.85)",
-    zIndex: 1000,
-    padding: "24px",
-    cursor: "zoom-out",
+    overflow: "hidden",
+  },
+});
 
-    "& img": {
-      maxWidth: "95vw",
-      maxHeight: "95vh",
-      objectFit: "contain",
-      borderRadius: "8px",
-    },
+const Photo = styled("img", {
+  base: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
   },
 });
 
@@ -95,7 +48,11 @@ const images = import.meta.glob<string>(
 );
 
 export function HomePage() {
-  const [opened, setOpened] = createSignal<string | null>(null);
+  const [photo] = createSignal<string | null>(() => {
+    const list = Object.values(images);
+    if (list.length === 0) return null;
+    return list[Math.floor(Math.random() * list.length)];
+  });
 
   onMount(() => {
     const clickAudio = new Audio(CLICK_SOUND_URL);
@@ -122,21 +79,12 @@ export function HomePage() {
         <Trans>Home</Trans>
       </Header>
       <div use:scrollable={{ class: content() }}>
-        <Gallery>
-          <For each={Object.values(images)}>
-            {(src) => (
-              <Thumb onClick={() => setOpened(src)}>
-                <img src={src} alt="" loading="lazy" />
-              </Thumb>
-            )}
-          </For>
-        </Gallery>
+        {photo() ? (
+          <Photo src={photo()!} alt="" />
+        ) : (
+          <Trans>No photos found</Trans>
+        )}
       </div>
-      {opened() && (
-        <Lightbox onClick={() => setOpened(null)}>
-          <img src={opened()!} alt="" />
-        </Lightbox>
-      )}
     </Base>
   );
 }
